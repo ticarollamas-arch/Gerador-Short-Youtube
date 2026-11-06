@@ -43,6 +43,30 @@ def _run(job_id, body):
         JOBS[job_id] = {"status": "failed", "error": str(e)}
 
 
+def check_keys():
+    """Real auth probes; returns HTTP status per provider, never the key values."""
+    import requests
+    from shorts_generator import config as c
+    out = {"LLM_PROVIDER": c.LLM_PROVIDER, "OPENAI_MODEL": c.OPENAI_MODEL, "GEMINI_MODEL": c.GEMINI_MODEL}
+    probes = {
+        "MUAPI_API_KEY": (c.MUAPI_API_KEY, lambda: requests.get(
+            f"{c.MUAPI_BASE_URL}/predictions/healthcheck/result", headers={"x-api-key": c.MUAPI_API_KEY}, timeout=20)),
+        "OPENAI_API_KEY": (c.OPENAI_API_KEY, lambda: requests.get(
+            f"https://api.openai.com/v1/models/{c.OPENAI_MODEL}", headers={"Authorization": f"Bearer {c.OPENAI_API_KEY}"}, timeout=20)),
+        "GEMINI_API_KEY": (c.GEMINI_API_KEY, lambda: requests.get(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{c.GEMINI_MODEL}", headers={"x-goog-api-key": c.GEMINI_API_KEY}, timeout=20)),
+    }
+    for name, (key, fn) in probes.items():
+        if not key:
+            out[name] = "missing"
+            continue
+        try:
+            out[name] = fn().status_code
+        except Exception as e:
+            out[name] = f"error: {e}"
+    return out
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, code, payload, ctype="application/json"):
         data = payload if isinstance(payload, bytes) else (
@@ -54,6 +78,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
+        if self.path == "/api/check-keys":
+            return self._send(200, check_keys())
         if self.path == "/health":
             return self._send(200, {"ok": True})
         if self.path.startswith("/api/shorts/"):
