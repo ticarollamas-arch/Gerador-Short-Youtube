@@ -17,7 +17,7 @@ Documentação original em inglês: [README-en.md](README-en.md).
 - **Vídeos longos**: acima de 30 min, a transcrição é dividida em blocos de 20 min com sobreposição.
 - **Deduplicação** de trechos sobrepostos e seleção dos N melhores.
 - **Recorte vertical** com rastreamento de rosto (modo local) ou autocrop (modo API).
-- **Serviço web** (`server.py`): formulário em `/`, `GET /health`, `POST /api/shorts` (`{"url", "num_clips", "mode"}`) e `GET /api/shorts/<job_id>` para acompanhar o resultado.
+- **Serviço web** (`server.py`): formulário em `/`, `GET /health`, `GET /api/check-keys` (testa as credenciais dos provedores), `POST /api/shorts` (`{"url", "num_clips", "mode"}`) e `GET /api/shorts/<job_id>` para acompanhar o resultado.
 - **Saída** com título, nota, frase de gancho e motivo de cada corte, além de JSON opcional com a transcrição completa.
 
 ## Instalação
